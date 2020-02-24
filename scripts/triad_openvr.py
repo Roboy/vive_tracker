@@ -155,10 +155,10 @@ class vr_tracked_device():
         self.vr = vr_obj
         
     def get_serial(self):
-        return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_SerialNumber_String).decode('utf-8')
+        return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_SerialNumber_String) #.decode('utf-8')
     
     def get_model(self):
-        return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_ModelNumber_String).decode('utf-8')
+        return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_ModelNumber_String) #.decode('utf-8')
         
     def sample(self,num_samples,sample_rate):
         interval = 1/sample_rate
@@ -195,7 +195,7 @@ class vr_tracked_device():
         return tracking
 class vr_tracking_reference(vr_tracked_device):
     def get_mode(self):
-        return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_ModeLabel_String).decode('utf-8').upper()
+        return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_ModeLabel_String).upper() #.decode('utf-8').upper()
     def sample(self,num_samples,sample_rate):
         print("Warning: Tracking References do not move, sample isn't much use...")
         

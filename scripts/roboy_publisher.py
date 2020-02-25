@@ -8,6 +8,7 @@ from visualization_msgs.msg import Marker
 from roboy_control_msgs.srv import GetLinkPose 
 from std_msgs.msg import Header, ColorRGBA
 from roboy_middleware_msgs.srv import InverseKinematics, InverseKinematicsRequest
+from scipy import interpolate
 
 import pdb
 
@@ -20,6 +21,26 @@ initial_pose_controller = PoseStamped()
 def _get_link_pose(link_name):
 	s = rospy.ServiceProxy("/get_link_pose", GetLinkPose)
 	return s(link_name).pose
+
+def interpolate(data):
+	x = range(len(data))
+	y = np.array(data)
+	f = interpolate.interp1d(x, y)
+	xnew = np.arange(x[0], x[-1], 0.1)
+	return f(xnew)
+
+
+def running_mean(data):
+	sum_x = 0
+	sum_y = 0
+	sum_z = 0
+
+	for d in data:
+		sum_x += d.x
+		sum_y += d.y
+		sum_z += d.z
+
+	return Point(sum_x/len(data), sum_y/len(data), sum_z/len(data))
 
 def LHR_74656729_cb(msg):
 	global LHR_74656729_pose, first, initial_pose_controller
@@ -54,10 +75,11 @@ if __name__ == "__main__":
 	time.sleep(1)
 
 	hand_left_pose = _get_link_pose("hand_left")
-	
+	accumulated_targets = []
+	rate = rospy.Rate(10)
 
 	while not rospy.is_shutdown():
-		time.sleep(0.2)
+		# rate.sleep()
 		current_pose_controller_vive = LHR_74656729_pose
 		current_pose_controller_torso = li.transformPose("LHR_29508350", current_pose_controller_vive) #li.lookupTransform('LHR_74656729', 'world', rospy.Time(0))
 		initial_pose_controller_torso = li.transformPose("LHR_29508350", initial_pose_controller)
@@ -65,6 +87,10 @@ if __name__ == "__main__":
 		current_pose_controller_torso.pose.position.y += hand_left_pose.position.y #- initial_pose_controller_torso.pose.position.y
 		current_pose_controller_torso.pose.position.z += hand_left_pose.position.z #- initial_pose_controller_torso.pose.position.z
 	  
+		# accumulated_targets.append(current_pose_controller_torso.pose.position)
+		# if len(accumulated_targets) > 50:
+		# 	accumulated_targets.pop(0)
+		# current_pose_controller_torso.pose.position = running_mean(accumulated_targets)
 
 		marker_msg = Marker()
 		marker_msg.header.frame_id = "LHR_29508350"
@@ -78,7 +104,13 @@ if __name__ == "__main__":
 		marker_msg.pose = current_pose_controller_torso.pose
 		marker_pub.publish(marker_msg)
 
-		requested_pose = li.transformPose("world", current_pose_controller_torso)
+		current_pose_controller_hand = li.transformPose("hand_left", current_pose_controller_torso)
+		current_pose_controller_hand.pose.position.z -= 0.05
+
+		requested_pose = li.transformPose("world", current_pose_controller_hand)
+
+		# requested_pose = li.transformPose("world", current_pose_controller_torso)
 
 		ik_request = InverseKinematicsRequest(endeffector="hand_left", target_frame="hand_left", pose=requested_pose.pose, type=1)
+
 		ik(ik_request)

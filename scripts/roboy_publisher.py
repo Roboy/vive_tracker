@@ -229,14 +229,15 @@ if __name__ == "__main__":
 		# requested_pose = li.transformPose("world", current_pose_headset_head)
 		#q_tracker_1*q_tracker_2.inverse
 
-		inverse = tf.transformations.quaternion_inverse([current_pose_headset_vive.pose.orientation.x, current_pose_headset_vive.pose.orientation.y, current_pose_headset_vive.pose.orientation.z, current_pose_headset_vive.pose.orientation.w])
-		q_tracker = [current_pose_tracker_vive.pose.pose.orientation.x, current_pose_tracker_vive.pose.pose.orientation.y, current_pose_tracker_vive.pose.pose.orientation.z, current_pose_tracker_vive.pose.pose.orientation.w]
-		inverse = quaternion_normalize(inverse)
-		q_tracker = quaternion_normalize(q_tracker)
-		q_new = tf.transformations.quaternion_multiply(inverse, q_tracker)
+		# inverse = tf.transformations.quaternion_inverse([current_pose_headset_vive.pose.orientation.x, current_pose_headset_vive.pose.orientation.y, current_pose_headset_vive.pose.orientation.z, current_pose_headset_vive.pose.orientation.w])
+		# q_tracker = [current_pose_tracker_vive.pose.pose.orientation.x, current_pose_tracker_vive.pose.pose.orientation.y, current_pose_tracker_vive.pose.pose.orientation.z, current_pose_tracker_vive.pose.pose.orientation.w]
+		# inverse = quaternion_normalize(inverse)
+		# q_tracker = quaternion_normalize(q_tracker)
+		# q_new = tf.transformations.quaternion_multiply(inverse, q_tracker)
 		# rpy_new = list(tf.transformations.euler_from_quaternion(q_new))
 		# rpy_new[2] -= math.pi/4.0
 		# q_new = tf.transformations.quaternion_from_euler(rpy_new[0], rpy_new[1], rpy_new[2])
+		'''
 		marker_msg = Marker()
 		marker_msg.header.frame_id = "world"
 		marker_msg.id = 103
@@ -252,17 +253,17 @@ if __name__ == "__main__":
 		marker_msg.pose.position = current_pose_headset_torso.pose.position
 		marker_msg.pose.orientation = current_pose_headset_torso.pose.orientation #Quaternion(x=q_new[0], y=q_new[1], z=q_new[2], w=q_new[3])
 		marker_pub.publish(marker_msg)
-
+		'''
 		joint_msg = JointState()
-		joint_msg.name = ['head_axis0', 'head_axis1', 'head_axis2']
+		joint_msg.name = ['head_axis0', 'head_axis2', 'head_axis1']
 		(r_headset, p_headset, y_headset) = list(tf.transformations.euler_from_quaternion(
 			[current_pose_headset_torso.pose.orientation.x,
 			 current_pose_headset_torso.pose.orientation.y,
 			 current_pose_headset_torso.pose.orientation.z,
 			 current_pose_headset_torso.pose.orientation.w]))
-		joint_msg.position = [r_head_init + r_headset, p_head_init + p_headset, y_head_init+y_headset]
+		joint_msg.position = [r_headset, p_headset, -y_headset]
 		joint_msg.velocity = np.zeros(len(joint_msg.name))
 		joint_msg.effort = np.zeros(len(joint_msg.name))
-		# joint_targets_pub.publish(joint_msg)
+		joint_targets_pub.publish(joint_msg)
 		# ik_request = InverseKinematicsRequest(endeffector="head", target_frame="head", pose=requested_pose.pose, type=0)
 		# ik(ik_request)

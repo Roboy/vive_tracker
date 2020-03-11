@@ -74,8 +74,14 @@ def vive_tracker():
                 broadcaster[deviceName] = tf.TransformBroadcaster()
 
             # Rotate Vive Trackers 180, so Z+ comes out of the top of the Tracker
-            if "LHR" in v.devices[deviceName].get_serial():
+            if "LHR" in v.devices[deviceName].get_serial() and  "5EA88DE7" not in v.devices[deviceName].get_serial() and "DCDAB072" not in v.devices[deviceName].get_serial():
                 [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(math.pi, 0.0, -math.pi/2.0))
+            if "5EA88DE7" in v.devices[deviceName].get_serial():
+                # [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.0, 0.0, 0.0))
+                [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.5*math.pi,0.0, math.pi)) #-math.pi/4
+            if "DCDAB072" in v.devices[deviceName].get_serial():
+                # [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.0, 0.0, 0.0))
+                [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.5*math.pi,-math.pi/4, math.pi)) #-math.pi/4
 
             broadcaster[deviceName].sendTransform((x,y,z),
                             (qx,qy,qz,qw),

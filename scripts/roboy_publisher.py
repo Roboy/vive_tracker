@@ -157,19 +157,19 @@ if __name__ == "__main__":
 		marker_msg.color = ColorRGBA(0.0,  255.0, 0.0, 40.0)
 		# import pdb; pdb.set_trace()
 		marker_msg.pose = current_pose_controller_torso.pose
-		marker_pub.publish(marker_msg)
+		# marker_pub.publish(marker_msg)
 
-		# current_pose_controller_hand = li.transformPose("hand_left", current_pose_controller_torso)
-		# current_pose_controller_hand.pose.position.z += 0.05
-		# requested_pose = li.transformPose("world", current_pose_controller_hand)
+		# current_pose_controller_lowerarm = li.transformPose("lowerarm_left", current_pose_controller_torso)
+		# current_pose_controller_lowerarm.pose.position.z -= 0.05
+		# requested_pose = li.transformPose("torso", current_pose_controller_lowerarm)
 
 		requested_pose = li.transformPose("world", current_pose_controller_torso)
-		qx = current_pose_controller_torso.pose.orientation.x
-		qy = current_pose_controller_torso.pose.orientation.y
-		qz = current_pose_controller_torso.pose.orientation.z
-		qw = current_pose_controller_torso.pose.orientation.w
+		qx = current_pose_controller_vive.pose.orientation.x
+		qy = current_pose_controller_vive.pose.orientation.y
+		qz = current_pose_controller_vive.pose.orientation.z
+		qw = current_pose_controller_vive.pose.orientation.w
 		(r, p, y) = tf.transformations.euler_from_quaternion([qx,qy,qz,qw])
-		joint_msg.position = [y]
+		joint_msg.position = [-r-1.57] #p, -y-1.57,
 
 
 		ik_request = InverseKinematicsRequest(endeffector="hand_left", target_frame="hand_left", pose=requested_pose.pose, type=1)

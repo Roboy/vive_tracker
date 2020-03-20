@@ -112,7 +112,8 @@ if __name__ == "__main__":
 	joints_pub = rospy.Publisher("/joint_targets", JointState, queue_size=1)
 	marker_pub = rospy.Publisher('/visualization_marker', Marker, queue_size=1)
 	# pose_sub = rospy.Subscriber('/vive/LHR_74656729_pose', PoseWithCovarianceStamped, LHR_74656729_cb)
-	pose_sub = rospy.Subscriber('/vive/LHR_5848CAA9_pose', PoseWithCovarianceStamped, LHR_5848CAA9_cb)
+	# pose_sub = rospy.Subscriber('/vive/LHR_5848CAA9_pose', PoseWithCovarianceStamped, LHR_5848CAA9_cb)
+	pose_sub = rospy.Subscriber('/vive/LHR_8855658B_pose', PoseWithCovarianceStamped, LHR_5848CAA9_cb)
 	time.sleep(1)
 
 	hand_left_pose = _get_link_pose("hand_left")
@@ -135,7 +136,8 @@ if __name__ == "__main__":
 	while not rospy.is_shutdown():
 		# rate.sleep()
 		current_pose_controller_vive = LHR_74656729_pose
-		current_pose_controller_torso = li.transformPose("LHR_29508350", current_pose_controller_vive) #li.lookupTransform('LHR_74656729', 'world', rospy.Time(0))
+		# current_pose_controller_torso = li.transformPose("LHR_29508350", current_pose_controller_vive)#li.lookupTransform('LHR_74656729', 'world', rospy.Time(0))
+		current_pose_controller_torso = li.transformPose("world", current_pose_controller_vive)
 		
 		current_pose_controller_torso.pose.position.x += hand_left_pose.position.x #- initial_pose_controller_torso.pose.position.x
 		current_pose_controller_torso.pose.position.y += hand_left_pose.position.y #- initial_pose_controller_torso.pose.position.y
@@ -146,9 +148,14 @@ if __name__ == "__main__":
 		# 	accumulated_targets.pop(0)
 		# current_pose_controller_torso.pose.position = running_mean(accumulated_targets)
 
+		# current_pose_controller_lowerarm = li.transformPose("lowerarm_left", current_pose_controller_torso)
+		# current_pose_controller_lowerarm.pose.position.z -= 0.15
+		# requested_pose = li.transformPose("world", current_pose_controller_lowerarm)
+		requested_pose = li.transformPose("world", current_pose_controller_torso)
+
 		marker_msg = Marker()
-		marker_msg.header.frame_id = "LHR_29508350"
-		# marker_msg.header.frame_id = "world"
+		# marker_msg.header.frame_id = "LHR_29508350"
+		marker_msg.header.frame_id = "world"
 		marker_msg.id = 102
 		marker_msg.type = 1
 		marker_msg.action = 0
@@ -156,14 +163,12 @@ if __name__ == "__main__":
 		marker_msg.scale = Vector3(0.1,0.1,0.1)
 		marker_msg.color = ColorRGBA(0.0,  255.0, 0.0, 40.0)
 		# import pdb; pdb.set_trace()
-		marker_msg.pose = current_pose_controller_torso.pose
-		# marker_pub.publish(marker_msg)
+		marker_msg.pose = requested_pose.pose #current_pose_controller_torso.pose
+		marker_pub.publish(marker_msg)
 
-		# current_pose_controller_lowerarm = li.transformPose("lowerarm_left", current_pose_controller_torso)
-		# current_pose_controller_lowerarm.pose.position.z -= 0.05
-		# requested_pose = li.transformPose("torso", current_pose_controller_lowerarm)
 
-		requested_pose = li.transformPose("world", current_pose_controller_torso)
+
+
 		qx = current_pose_controller_vive.pose.orientation.x
 		qy = current_pose_controller_vive.pose.orientation.y
 		qz = current_pose_controller_vive.pose.orientation.z
@@ -175,4 +180,4 @@ if __name__ == "__main__":
 		ik_request = InverseKinematicsRequest(endeffector="hand_left", target_frame="hand_left", pose=requested_pose.pose, type=1)
 
 		ik(ik_request)
-		joints_pub.publish(joint_msg)
+		# joints_pub.publish(joint_msg)

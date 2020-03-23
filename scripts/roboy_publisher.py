@@ -138,7 +138,7 @@ if __name__ == "__main__":
 	joint_targets_pub = rospy.Publisher("/joint_targets", JointState, queue_size=1)
 	# joint_state_sub = rospy.Subscriber('/cardsflow_joint_states', JointState,  joint_state_cb, queue_size=1)
 	marker_pub = rospy.Publisher('/visualization_marker', Marker, queue_size=1)
-	controller_pose_sub = rospy.Subscriber('/vive/LHR_74656729_pose', PoseWithCovarianceStamped, LHR_74656729_cb)
+	controller_pose_sub = rospy.Subscriber('/vive/LHR_8855658B_pose', PoseWithCovarianceStamped, LHR_74656729_cb)
 	headset_pose_sub = rospy.Subscriber('/vive/LHR_5EA88DE7_pose', PoseWithCovarianceStamped, LHR_5EA88DE7_cb)
 
 	time.sleep(1)

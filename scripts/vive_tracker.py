@@ -2,7 +2,7 @@
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3, PoseWithCovarianceStamped
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 import triad_openvr
 import time
 import sys
@@ -20,6 +20,7 @@ def vive_tracker():
     listener = tf.TransformListener()
     rate = rospy.Rate(30) # 10hz]
     deviceCount = 0
+    trigger_pub = rospy.Publisher('/trigger', Bool, queue_size=1)
 
     try:
       v = triad_openvr.triad_openvr()
@@ -74,8 +75,22 @@ def vive_tracker():
                 broadcaster[deviceName] = tf.TransformBroadcaster()
 
             # Rotate Vive Trackers 180, so Z+ comes out of the top of the Tracker
-            if "LHR" in v.devices[deviceName].get_serial():
+            # if "LHR" in v.devices[deviceName].get_serial():
+            #     [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(math.pi, 0.0, -math.pi/2.0))
+
+            if "LHR" in v.devices[deviceName].get_serial() and  "5EA88DE7" not in v.devices[deviceName].get_serial() and "DCDAB072" not in v.devices[deviceName].get_serial():
                 [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(math.pi, 0.0, -math.pi/2.0))
+            if "5EA88DE7" in v.devices[deviceName].get_serial():
+                # [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.0, 0.0, 0.0))
+                [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(math.pi/2.,0.0, math.pi)) #-math.pi/4
+            if "DCDAB072" in v.devices[deviceName].get_serial():
+                # [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.0, 0.0, 0.0))
+                [qx, qy, qz, qw] = tf.transformations.quaternion_multiply([qx, qy, qz, qw], tf.transformations.quaternion_from_euler(0.5*math.pi,-math.pi/4, math.pi)) #-math.pi/4
+
+            if "controller" in deviceName:
+                if v.devices[deviceName].vr.getControllerState(v.devices[deviceName].index)[1].rAxis[1].x == 1.0:
+                    trigger_pub.publish(True)
+
 
             broadcaster[deviceName].sendTransform((x,y,z),
                             (qx,qy,qz,qw),
@@ -118,7 +133,8 @@ def vive_tracker():
 
                 # set the velocity
                 odom.child_frame_id = "ak1_base_link"
-                [vx, vy, vz, v_roll, v_pitch, v_yaw] = v.devices[deviceName].get_velocities()
+                [vx, vy, vz,v_roll, v_pitch, v_yaw] = v.devices[deviceName].get_velocities()
+                # [v_roll, v_pitch, v_yaw] = v.devices[deviceName].get_angular_velocity()
                 odom.twist.twist = Twist(Vector3(vx, vy, vz), Vector3(v_roll, v_pitch, v_yaw))
                 # This is all wrong but close enough for now
                 # np.mat([1[1e-6, 0, 0], [0, 1e-6, 0], [0, 0, 1e-3]])

@@ -133,7 +133,7 @@ class pose_sample_buffer():
         self.r_x = []
         self.r_y = []
         self.r_z = []
-    
+
     def append(self,pose_mat,t):
         self.time.append(t)
         self.x.append(pose_mat[0][3])
@@ -153,13 +153,13 @@ class vr_tracked_device():
         self.device_class = device_class
         self.index = index
         self.vr = vr_obj
-        
+
     def get_serial(self):
         return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_SerialNumber_String) #.decode('utf-8')
-    
+
     def get_model(self):
         return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_ModelNumber_String) #.decode('utf-8')
-        
+
     def sample(self,num_samples,sample_rate):
         interval = 1/sample_rate
         rtn = pose_sample_buffer()
@@ -172,11 +172,11 @@ class vr_tracked_device():
             if sleep_time>0:
                 time.sleep(sleep_time)
         return rtn
-        
+
     def get_pose_euler(self):
         pose = self.vr.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0,openvr.k_unMaxTrackedDeviceCount)
         return convert_to_euler(pose[self.index].mDeviceToAbsoluteTracking)
-    
+
     def get_pose_quaternion(self):
         pose = self.vr.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0,openvr.k_unMaxTrackedDeviceCount)
         return convert_to_quaternion(pose[self.index].mDeviceToAbsoluteTracking)
@@ -188,7 +188,7 @@ class vr_tracked_device():
     def get_velocities(self):
         pose = self.vr.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0,openvr.k_unMaxTrackedDeviceCount)
         [v_x, v_y, v_z] = pose[self.index].vVelocity
-        [a_x, a_y, a_z] = pose[self.index].vAngularVelocity 
+        [a_x, a_y, a_z] = pose[self.index].vAngularVelocity
         return [v_x, v_y, v_z, a_x, a_y, a_z]
     def is_connected(self):
         tracking = self.vr.isTrackedDeviceConnected(self.index)
@@ -198,17 +198,17 @@ class vr_tracking_reference(vr_tracked_device):
         return self.vr.getStringTrackedDeviceProperty(self.index,openvr.Prop_ModeLabel_String).upper() #.decode('utf-8').upper()
     def sample(self,num_samples,sample_rate):
         print("Warning: Tracking References do not move, sample isn't much use...")
-        
+
 class triad_openvr():
     def __init__(self):
-        # Initialize OpenVR in the 
+        # Initialize OpenVR in the
         self.vr = openvr.init(openvr.VRApplication_Other)
-        
-        # Initializing object to hold indexes for various tracked objects 
+
+        # Initializing object to hold indexes for various tracked objects
         self.object_names = {"Tracking Reference":[],"HMD":[],"Controller":[],"Tracker":[]}
         self.devices = {}
         poses = self.vr.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0,
-                                                               openvr.k_unMaxTrackedDeviceCount)
+                                                        openvr.k_unMaxTrackedDeviceCount)
         # Iterate through the pose list to find the active devices and determine their type
         for i in range(openvr.k_unMaxTrackedDeviceCount):
             if poses[i].bPoseIsValid:
@@ -229,16 +229,16 @@ class triad_openvr():
                     device_name = "tracking_reference_"+str(len(self.object_names["Tracking Reference"])+1)
                     self.object_names["Tracking Reference"].append(device_name)
                     self.devices[device_name] = vr_tracking_reference(self.vr,i,"Tracking Reference")
-    
+
     def rename_device(self,old_device_name,new_device_name):
         self.devices[new_device_name] = self.devices.pop(old_device_name)
         for i in range(len(self.object_names[self.devices[new_device_name].device_class])):
             if self.object_names[self.devices[new_device_name].device_class][i] == old_device_name:
                 self.object_names[self.devices[new_device_name].device_class][i] = new_device_name
     def get_device_count(self):
-      return len(self.devices)
+        return len(self.devices)
 
-    def print_discovered_objects(self):   
+    def print_discovered_objects(self):
         for device_type in self.object_names:
             plural = device_type
             if len(self.object_names[device_type])!=1:

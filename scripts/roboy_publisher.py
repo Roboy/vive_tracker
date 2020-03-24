@@ -16,8 +16,6 @@ from scipy import interpolate
 import pdb
 
 rospy.init_node("roboy_publisher")
-global reset
-reset = False
 
 def _get_link_pose(link_name):
 	s = rospy.ServiceProxy("/get_link_pose", GetLinkPose)
@@ -141,7 +139,7 @@ class Headset:
 			 current_pose_headset_torso.pose.orientation.y,
 			 current_pose_headset_torso.pose.orientation.z,
 			 current_pose_headset_torso.pose.orientation.w]))
-		self.joint_msg.position = [r_headset, p_headset, -y_headset+1.57]
+		self.joint_msg.position = [r_headset, p_headset, -y_headset+0.25*math.pi]
 		self.joint_msg.velocity = np.zeros(len(self.joint_msg.name))
 		self.joint_msg.effort = np.zeros(len(self.joint_msg.name))
 		self.joint_pub.publish(self.joint_msg)
